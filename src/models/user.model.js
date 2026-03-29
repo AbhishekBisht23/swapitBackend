@@ -37,12 +37,13 @@ const userSchema = new Schema({
 
     phoneNo:{
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
 
     avatar:{
         type: String,
-        required: true
+        // required: true
     },
 
     location: {
@@ -60,6 +61,10 @@ const userSchema = new Schema({
             city: String,
             localArea: String
         }
+    },
+
+    refreshToken:{
+        type:String
     }
 },{timestamps: true})
 
