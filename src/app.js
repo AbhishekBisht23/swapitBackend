@@ -19,6 +19,8 @@ app.use(cookieParser());
 
 
 import userRouter from "./routes/user.routes.js"
+import itemRouter from "./routes/item.router.js"
 
 app.use("/users",userRouter);
+app.use("/item",itemRouter);
 export default app;

@@ -10,7 +10,6 @@ const registerUser = asyncHandler(async (req,res)=>{
     //create entry in database
     //remove password and refreshtoken field from response
     //return res
-    console.log("hiiiiiiiiiiiiiiiiiiiiiiii");
     
     const {username, email, password, fullname, phoneNo, location} = req.body;
     console.log("heeeeeeeeeeeeeeeeeeeeeeee");
@@ -76,7 +75,7 @@ const loginUser = asyncHandler(async (req,res)=>{
 
     const user = await User.findOne(
         {
-            $or:[{email}, {username}]
+            $or:[{email}, {username: username.toLowerCase()}]
         }
     ).select("-password -refreshToken")
 
@@ -109,8 +108,39 @@ const loginUser = asyncHandler(async (req,res)=>{
 
 })
 
+const logoutUser = asyncHandler(async (req,res)=>{
+    // const user = req.user;
+    await User.findByIdAndUpdate(req.user?._id,{
+        $set:{
+            refreshToken: undefined
+        }
+    },
+    {
+        new: true
+    })
+    const option ={
+        httpOnly: true,
+        secure: true
+    }
+    return res
+    .status(200)
+    .clearCookie("accessToken",option)
+    .clearCookie("refreshToken",option)
+    .json(
+        new ApiResponse(200,{},"user loggedOut successfully")
+    )
+})
+
+const getUserProfile = asyncHandler(async (req,res)=>{
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,req.user,"successfully fetched user profile")
+    )
+})
 
 export {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser
 }
