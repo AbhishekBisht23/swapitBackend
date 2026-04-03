@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Item } from "../models/items.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -175,8 +176,138 @@ const getSingleItem = asyncHandler(async (req, res)=>{
     )
 })
 
+const getUserItems = asyncHandler(async (req, res) => {
+
+    const items = await Item.find({ owner: req.user._id })
+        .select("itemName description condition images itemStatus category");
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, items, "User items fetched successfully")
+        );
+});
+
+const updateItem = asyncHandler(async (req,res)=>{
+    const {itemId} = req.params
+
+    const item= await Item.findById(itemId);
+
+    if(!item){
+        throw new ApiError(404,"item not found")
+    }
+
+    if(item.owner.toString() !== req.user._id.toString()){
+        throw new ApiError(403,"Invalid user request")
+    }
+
+    const {itemName, description, condition, itemStatus, category} = req.body
+    if([itemName, description, condition, itemStatus, category].some((field)=> !field ||field.trim()==="")){
+        throw new ApiError(400,"all fields are required")
+    }
+
+    const updatedItem = await Item.findByIdAndUpdate( itemId,
+        {
+            itemName,
+            description,
+            condition,
+            itemStatus,
+            category
+        },
+        { new: true }
+    )
+    
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,updatedItem,"successfully updated")
+    )
+
+
+});
+
+const updateItemImages = asyncHandler( async (req,res)=>{
+    const {itemId} = req.params
+    const item = await Item.findById(itemId)
+    
+    if(!item){
+        throw new ApiError(404,"item not found")
+    }
+
+    if(item.owner.toString() !== req.user._id.toString()){
+        throw new ApiError(403,"invalid user request")
+    }
+
+    const localFilesPath = req.files?.map((file)=>{
+        return file.path
+    }) || []
+
+    if(!(Array.isArray(localFilesPath) && localFilesPath.length > 0 )){
+        throw new ApiError(400, "Atleast one image is required")
+    }
+
+    const uploadPromises = localFilesPath.map((path)=>{
+        return uploadOnCloudinary(path)
+    })
+
+    const images = await Promise.all(uploadPromises);
+
+    const imagesUrl = images
+    .filter((file)=>file!==null)
+    .map((field)=>field.url)
+
+    if(!(imagesUrl.length >0)){
+        throw new ApiError(500,"failed to upload images")
+    }
+
+    const updatedItem = await Item.findByIdAndUpdate(
+        itemId,
+        {
+            images: imagesUrl
+        },
+        {
+            new: true
+        }
+    )
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,updateItem,"image updated successfully")
+    )
+})
+
+const deleteItem = asyncHandler(async (req,res)=>{
+    const {itemId} = req.params
+    const item = await Item.findById(itemId);
+    if(!item){
+        throw new ApiError(404,'item not found')
+    }
+
+    if(item.owner.toString()!== req.user._id.toString()){
+        throw new ApiError(403,"Invalid user request")
+    }
+
+    const deletedItem= await Item.findByIdAndDelete(itemId);
+
+    if(!deletedItem){
+        throw new ApiError(500,"failed to delete item")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,deletedItem,"item deleted succesfully")
+    )
+})
+
+
 export {
     createItem,
     getAllItems,
-    getSingleItem
+    getSingleItem,
+    getUserItems,
+    updateItem,
+    updateItemImages,
+    deleteItem
 }
