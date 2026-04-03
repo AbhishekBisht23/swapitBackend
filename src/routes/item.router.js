@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { upload } from "../middlewares/multer.middleware";
-import { createItem, getAllItems, getSingleItem } from "../controllers/item.controller";
-import { verifyJWT } from "../middlewares/auth.middleware";
+import { upload } from "../middlewares/multer.middleware.js";
+import { createItem, getAllItems, getSingleItem } from "../controllers/item.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 

@@ -12,14 +12,13 @@ const registerUser = asyncHandler(async (req,res)=>{
     //return res
     
     const {username, email, password, fullname, phoneNo, location} = req.body;
-    console.log("heeeeeeeeeeeeeeeeeeeeeeee");
     
 
     // if(!(username && email && password && fullname && phoneNo && location)){
     //     throw new ApiError(400,"all fields are required")
     // }
 
-    if ([username, email, password, fullname, phoneNo, location].some(field => !field || field.trim() === "")) {
+    if ([username, email, password, fullname, phoneNo].some(field =>field?.trim() === "")) {
     throw new ApiError(400, "All fields are required");
     }
 
@@ -77,7 +76,7 @@ const loginUser = asyncHandler(async (req,res)=>{
         {
             $or:[{email}, {username: username.toLowerCase()}]
         }
-    ).select("-password -refreshToken")
+    ).select("-refreshToken")
 
     if(!user){
         throw new ApiError(404,"User not found");
