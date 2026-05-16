@@ -101,8 +101,81 @@ const rejectSwap = asyncHandler(async(req,res)=>{
         new ApiResponse(200,swap,"swap request rejected succefully")
     )
 })
+
+const getMySwap = asyncHandler(async(req,res)=>{
+    const user = req.user._id
+        const swapReqReceived = await Request.aggregate([
+            {
+                $match:{
+                    requestedTo: user
+                }
+            },
+            {
+                $project:{
+                    requestedTo: 1,
+                    requestedBy:1,
+                    requestedItem:1,
+                    offeredItem:1,
+                    requestStatus:1
+                }
+            }
+    
+        ])
+    
+        const swapReqMade = await Request.aggregate([
+            {
+                $match:{
+                    requestedBy: user
+                }
+            },
+            {
+                $project:{
+                    requestedTo: 1,
+                    requestedBy:1,
+                    requestedItem:1,
+                    offeredItem:1,
+                    requestStatus:1
+                }
+            }
+    
+        ])
+
+    res.status(200).json(
+        new ApiResponse(200,{swapReqReceived,swapReqMade},"swap request fetched successfully")
+    )
+
+    
+})
+
+const cancelSwap = asyncHandler(async(req,res)=>{
+    const {swapId} = req.params
+    const swap = await Request.findById(swapId)
+    if(!swap)
+    {
+        throw new ApiError(404,"swap request not found")
+    }
+
+    if(swap.requestedBy.toString() !== req.user._id.toString())
+    {
+        throw new ApiError(403,"unauthorized req")
+    }
+
+    if(swap.requestStatus !== "pending")
+    {
+        throw new ApiError(400, "swap request already processed")
+    }
+
+    const deletedSwap = await Request.findByIdAndDelete(swapId)
+
+    res.status(200).json(
+        new ApiResponse(200,deletedSwap,"swap request cancelled successfully")
+    )
+})
 export {
     createSwapRequest,
     acceptSwap,
-    rejectSwap
+    rejectSwap,
+    getMySwap,
+    cancelSwap
+
 }
