@@ -56,27 +56,27 @@ const createItem = asyncHandler(async (req, res)=>{
 })
 
 const getAllItems = asyncHandler(async (req,res)=>{
-   try {
-     const allItems = Item.aggregate([
+     const allItems = await Item.aggregate([
          {
              $match:{
                  itemStatus: "available"
              }
          },
          {
-             $limit: 50
-         },
-         {
-             $sort:{
+            $sort:{
                  createdAt: -1
              }
+             
+         },
+         {
+             $limit: 50
          },
          {
              $lookup:{
                  from: "users",
                  localField: "owner",
                  foreignField: "_id",
-                 as: ownerfield,
+                 as: "ownerfield",
                  pipeline:[
                      {
                          $project:{
@@ -105,7 +105,7 @@ const getAllItems = asyncHandler(async (req,res)=>{
          }
      ])
  
-     if(!allItems || allItems.length ===0){
+     if(!allItems || allItems.length ==0){
          throw new ApiError(500,"failed to fetch items")
      }
      return res
@@ -113,9 +113,7 @@ const getAllItems = asyncHandler(async (req,res)=>{
      .json(
          new ApiResponse(200,allItems[0],"items fetched successfully")
      )
-   } catch (error) {
-        throw new ApiError(500,"failed to fetch items")
-   }
+
 })
 
 const getSingleItem = asyncHandler(async (req, res)=>{
@@ -129,7 +127,7 @@ const getSingleItem = asyncHandler(async (req, res)=>{
     const item = await Item.aggregate([
         {
             $match:{
-                _id: itemId
+                _id: new mongoose.Types.ObjectId(itemId)
             }
         },
         {

@@ -13,6 +13,9 @@ const createSwapRequest = asyncHandler(async (req , res)=>{
     if(!requestedItem || !offeredItem){
         throw new ApiError(404,"item not found")
     }
+    if(offeredItem.owner.toString() !== req.user._id.toString()){
+        throw new ApiError(401, "unauthorized request")
+    }
 
     if(requestedItem.itemStatus === "swapped" ||  offeredItem.itemStatus ==="swapped"){
         throw new ApiError(400,"item already swapped")
@@ -51,7 +54,7 @@ const acceptSwap = asyncHandler(async(req,res)=>{
         throw new ApiError(404,"swap request not found")
     }
 
-    if(swap.requestedItem.owner.toString() !== req.user._id.toString())
+    if(swap.requestedTo.toString() !== req.user._id.toString())
     {
         throw new ApiError(400,"unauthorized to accept request")
     }
@@ -61,15 +64,20 @@ const acceptSwap = asyncHandler(async(req,res)=>{
     }
 
     swap.requestStatus = "accepted"
+    const requestedItem = await Item.findById(swap.requestedItem)
+    const offeredItem = await Item.findById(swap.offeredItem)
 
-    swap.requestedItem.itemStatus = "swapped"
-    swap.offeredItem.itemStatus = "swapped"
+    if(!requestedItem || !offeredItem){
+        throw new ApiError(404,"item not found")
+    }
+    requestedItem.itemStatus = "swapped"
+    offeredItem.itemStatus = "swapped"
 
     await swap.save()
-    await swap.requestedItem.save()
-    await swap.offeredItem.save()
+    await requestedItem.save()
+    await offeredItem.save()
 
-    res.status(200).json(
+    return res.status(200).json(
         new ApiResponse(200,swap,"swap request accepted succesfully")
     )
 })
@@ -83,7 +91,7 @@ const rejectSwap = asyncHandler(async(req,res)=>{
         throw new ApiError(404,"swap request not found")
     }
 
-    if(swap.requestedBy.toString() !== req.user._id)
+    if(swap.requestedTo.toString() !== req.user._id.toString())
     {
         throw new ApiError(400, "unauthorized")
     }
@@ -97,7 +105,7 @@ const rejectSwap = asyncHandler(async(req,res)=>{
 
     await swap.save()
 
-    res.status(200).json(
+    return res.status(200).json(
         new ApiResponse(200,swap,"swap request rejected succefully")
     )
 })
@@ -140,7 +148,7 @@ const getMySwap = asyncHandler(async(req,res)=>{
     
         ])
 
-    res.status(200).json(
+    return res.status(200).json(
         new ApiResponse(200,{swapReqReceived,swapReqMade},"swap request fetched successfully")
     )
 
@@ -167,7 +175,7 @@ const cancelSwap = asyncHandler(async(req,res)=>{
 
     const deletedSwap = await Request.findByIdAndDelete(swapId)
 
-    res.status(200).json(
+    return res.status(200).json(
         new ApiResponse(200,deletedSwap,"swap request cancelled successfully")
     )
 })
