@@ -20,7 +20,9 @@ app.use(cookieParser());
 
 import userRouter from "./routes/user.routes.js"
 import itemRouter from "./routes/item.router.js"
+import swapRouter from "./routes/swap.router.js"
 
 app.use("/users",userRouter);
 app.use("/item",itemRouter);
+app.use("/swap",swapRouter);
 export default app;
