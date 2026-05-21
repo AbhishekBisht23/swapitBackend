@@ -18,12 +18,14 @@ const createItem = asyncHandler(async (req, res)=>{
     if(!(Array.isArray(localfilepaths) && localfilepaths.length >0) ){
         throw new ApiError(400,"atleast One image is required")
     }
-
+    console.log(localfilepaths);
+    console.log("before upload")
     const uploadsPromise = localfilepaths.map((filePath)=>{
         return uploadOnCloudinary(filePath)
     })
 
     const images = await Promise.all(uploadsPromise);
+    console.log(images);
 
     const imagesUrl = images
     .filter(file => file !== null)
