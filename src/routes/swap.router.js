@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware";
-import { acceptSwap, cancelSwap, createSwapRequest, getMySwap, rejectSwap } from "../controllers/request.controller";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { acceptSwap, cancelSwap, createSwapRequest, getMySwap, rejectSwap } from "../controllers/request.controller.js";
 
 const router = Router();
 router.route("/create-Swap-Request").post(verifyJWT,createSwapRequest);
